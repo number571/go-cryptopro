@@ -1,4 +1,5 @@
 // ГОСТ Р ИСО 28640-2012
+// https://docs.cntd.ru/document/1200096454
 package gost_r_iso_28640_2012
 
 /*
@@ -10,28 +11,45 @@ import (
 	"io"
 )
 
-type Reader struct{}
+var (
+	Reader io.Reader = reader{}
+)
 
-var _ io.Reader = Reader{}
+const (
+	RandType = "ГОСТ Р ИСО 28640-2012"
+)
 
-func Read(p []byte) (n int, err error) {
-	return io.ReadFull(Reader{}, p)
+type reader struct{}
+
+// Call forwarding function
+// to an interface function.
+func Read(p []byte) (int, error) {
+	return io.ReadFull(Reader, p)
 }
 
-func (r Reader) Read(p []byte) (n int, err error) {
-	n = len(p)
-	copy(p, Rand(n))
+// Interface function for the Reader object.
+func (r reader) Read(p []byte) (int, error) {
+	var (
+		n   = len(p)
+		res = Rand(n)
+	)
+	if res == nil {
+		return 0, fmt.Errorf("rand is nil")
+	}
+	copy(p, res)
 	return n, nil
 }
 
+// The CryptGenRandom function is used based on
+// cryptographic provider PROV_GOST_2012_256.
 func Rand(size int) []byte {
 	var (
 		output = make([]byte, size)
 	)
-	if size <= 0 {
-		panic(fmt.Errorf("error: size <= 0"))
+	if size < 0 {
+		return nil
 	}
-	ret := C.Rand((*C.uchar)(&output[0]), C.uint(size))
+	ret := C.Rand(toCbytes(output), C.uint(size))
 	if ret < 0 {
 		panic(fmt.Errorf("error code: %d", ret))
 	}

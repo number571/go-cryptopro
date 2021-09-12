@@ -1,4 +1,31 @@
 /*
+func GenPrivKey(cfg *Config) error {}
+func NewPrivKey(cfg *Config) (PrivKey, error) {}
+func LoadPrivKey(pbytes []byte) (PrivKey, error) {}
+func (key PrivKey) Bytes() []byte {}
+func (key PrivKey) String() string {}
+func (key PrivKey) Sign(dbytes []byte) ([]byte, error) {}
+func (key PrivKey) PubKey() PubKey {}
+func (key PrivKey) Equals(cmp PrivKey) bool {}
+func (key PrivKey) Type() string {}
+
+func LoadPubKey(pbytes []byte) (PubKey, error) {}
+func (key PubKey) Address() Address {}
+func (key PubKey) Bytes() []byte {}
+func (key PubKey) String() string {}
+func (key PubKey) VerifySignature(dbytes, sign []byte) bool {}
+func (key PubKey) Equals(cmp PubKey) bool {}
+func (key PubKey) Type() string {}
+
+func NewBatchVerifier() BatchVerifier {}
+func (b *BatchVerifier) Add(key PubKey, message, signature []byte) error {}
+func (b *BatchVerifier) Verify() (bool, []bool) {}
+
+func NewConfig(prov ProvType, subject, password string) *Config {}
+*/
+package gost_r_34_10_2012
+
+/*
 package main
 
 import (
@@ -40,4 +67,3 @@ func main() {
 	)
 }
 */
-package gost_r_34_10_2012

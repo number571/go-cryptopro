@@ -1,4 +1,11 @@
 /*
+func Read(p []byte) (int, error) {}
+func (r Reader) Read(p []byte) (int, error) {}
+func Rand(size int) []byte {}
+*/
+package gost_r_iso_28640_2012
+
+/*
 package main
 
 import (
@@ -15,4 +22,3 @@ func main() {
 	fmt.Println(grand.Rand(32))
 }
 */
-package gost_r_iso_28640_2012

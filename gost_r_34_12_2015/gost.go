@@ -1,4 +1,5 @@
-// ГОСТ Р 34.12-2015, CBC-MODE
+// ГОСТ Р 34.12-2015
+// https://docs.cntd.ru/document/1200121983
 package gost_r_34_12_2015
 
 /*
@@ -7,54 +8,122 @@ package gost_r_34_12_2015
 import "C"
 import (
 	"bytes"
+	"crypto/cipher"
 	"fmt"
 	"unsafe"
 
-	rand "bitbucket.org/number571/go-cryptopro/gost_r_iso_28640_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
-func Keygen() []byte {
-	return rand.Rand(32)
+var (
+	_ cipher.AEAD = &Cipher{}
+)
+
+const (
+	CipherType = "ГОСТ Р 34.12-2015"
+)
+
+const (
+	KeySize   = 32
+	BlockSize = 16
+	NonceSize = 16
+	Overhead  = ghash.Size256
+)
+
+/*
+ * CIPHER
+ */
+
+type Cipher struct {
+	key [KeySize]byte
 }
 
-func Encrypt(data, key []byte) []byte {
-	var (
-		iv              = rand.Rand(C.GR3412SIZ)
-		keylen          = len(key)
-		datlen          = len(data) + C.GR3412SIZ
-		datptr          = (*C.uchar)(&(append(data, make([]byte, C.GR3412SIZ)...))[0])
-		vecptr          = (*C.uchar)(&(iv)[0])
-		keyptr *C.uchar = nil
-	)
-	if keylen > 0 {
-		keyptr = (*C.uchar)(&key[0])
+// Mac-then-encrypt
+func New(key []byte) (cipher.AEAD, error) {
+	if len(key) != KeySize {
+		return nil, fmt.Errorf("error: key length != %d", KeySize)
 	}
-	reslen := C.Cipher(C.ENCRYPT, datptr, (C.uint)(datlen), keyptr, (C.uint)(keylen), vecptr)
+	cphr := new(Cipher)
+	copy(cphr.key[:], key)
+	return cphr, nil
+}
+
+// Encrypt with authentication information.
+func (cphr *Cipher) Seal(dst, nonce, plaintext, addData []byte) []byte {
+	if len(nonce) != cphr.NonceSize() {
+		return nil
+	}
+	mbytes := bytes.Join(
+		[][]byte{
+			nonce,
+			plaintext,
+			addData,
+		},
+		[]byte{},
+	)
+	mac := ghash.SumHMAC(ghash.H256, mbytes, cphr.key[:])
+	ciphertext := bytes.Join(
+		[][]byte{
+			mac,
+			encrypt(plaintext, cphr.key[:], nonce),
+		},
+		[]byte{},
+	)
+	copy(dst[:cap(dst)], ciphertext)
+	return ciphertext
+}
+
+// Decrypt with authentication information.
+func (cphr *Cipher) Open(dst, nonce, ciphertext, addData []byte) ([]byte, error) {
+	if len(nonce) != cphr.NonceSize() {
+		return nil, fmt.Errorf("error: nonce size < nonce const")
+	}
+	if len(ciphertext) < Overhead {
+		return nil, fmt.Errorf("error: len cipher < overhead")
+	}
+	mac := ciphertext[:ghash.Size256]
+	plaintext := encrypt(ciphertext[ghash.Size256:], cphr.key[:], nonce)
+	if plaintext == nil {
+		return nil, fmt.Errorf("error: decrypt")
+	}
+	mbytes := bytes.Join(
+		[][]byte{
+			nonce,
+			plaintext,
+			addData,
+		},
+		[]byte{},
+	)
+	check := ghash.SumHMAC(ghash.H256, mbytes, cphr.key[:])
+	if !bytes.Equal(mac, check) {
+		return nil, fmt.Errorf("error: authentication")
+	}
+	copy(dst[:cap(dst)], plaintext)
+	return plaintext, nil
+}
+
+func (cphr *Cipher) NonceSize() int {
+	return NonceSize
+}
+
+func (cphr *Cipher) Overhead() int {
+	return Overhead
+}
+
+func encrypt(data, key, iv []byte) []byte {
+	var (
+		datlen = len(data)
+		cpdata = make([]byte, datlen)
+	)
+	copy(cpdata, data)
+	var (
+		datptr = toCbytes(cpdata)
+		vecptr = toCbytes(iv)
+		keyptr = toCbytes(key)
+	)
+	reslen := C.Encrypt(datptr, (C.uint)(datlen), keyptr, (C.uint)(len(key)), vecptr)
 	if reslen < 0 {
 		panic(fmt.Errorf("error code: %d", reslen))
 	}
-	return bytes.Join([][]byte{
-		iv,
-		C.GoBytes(unsafe.Pointer(datptr), reslen),
-	}, []byte{})
-}
-
-func Decrypt(data, key []byte) ([]byte, error) {
-	if len(data) < C.GR3412SIZ {
-		return nil, fmt.Errorf("len(iv) < C.GR3412SIZ")
-	}
-	var (
-		keylen          = len(key)
-		datptr          = (*C.uchar)(&data[C.GR3412SIZ])
-		vecptr          = (*C.uchar)(&(data[:C.GR3412SIZ])[0])
-		keyptr *C.uchar = nil
-	)
-	if keylen > 0 {
-		keyptr = (*C.uchar)(&key[0])
-	}
-	reslen := C.Cipher(C.DECRYPT, datptr, (C.uint)(len(data[C.GR3412SIZ:])), keyptr, (C.uint)(keylen), vecptr)
-	if reslen < 0 {
-		return nil, fmt.Errorf("error code: %d", reslen)
-	}
-	return C.GoBytes(unsafe.Pointer(datptr), reslen), nil
+	return C.GoBytes(unsafe.Pointer(datptr), reslen)
 }

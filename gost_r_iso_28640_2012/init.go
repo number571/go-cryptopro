@@ -11,8 +11,9 @@ package gost_r_iso_28640_2012
 */
 import "C"
 
-/*
-func CRandBytes(numBytes int) []byte {
-	return randBytes(numBytes)
+func toCbytes(data []byte) *C.uchar {
+	if len(data) > 0 {
+		return (*C.uchar)(&data[0])
+	}
+	return nil
 }
-*/

@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	NUM_ROUND     = (1 << 7)
 	TEST_SUBJECT  = "subject"
 	TEST_PASSWORD = "password"
 )
@@ -15,8 +14,11 @@ var (
 	TEST_MESSAGE_1 = []byte("hello, world!")
 	TEST_MESSAGE_2 = []byte("qwerty")
 	TEST_MESSAGE_3 = []byte("abcdefghijklmnopqrstuvwxyz")
-	PRIVATE_KEY    PrivKey
-	PUBLIC_KEY     PubKey
+)
+
+var (
+	PRIVATE_KEY PrivKey
+	PUBLIC_KEY  PubKey
 )
 
 func init() {
@@ -42,10 +44,14 @@ func TestVerifySign(t *testing.T) {
 	}
 
 	if !PUBLIC_KEY.VerifySignature(TEST_MESSAGE_1, sign) {
-		t.Errorf("test failed: verify")
+		t.Errorf("test failed: verify (1)")
 	}
 
-	t.Logf("test success")
+	sign[7] ^= byte(0x1)
+
+	if PUBLIC_KEY.VerifySignature(TEST_MESSAGE_1, sign) {
+		t.Errorf("test failed: verify (2)")
+	}
 }
 
 func TestBatchVerifier(t *testing.T) {
@@ -75,8 +81,6 @@ func TestBatchVerifier(t *testing.T) {
 			t.Errorf("test failed: batch verify (%d)", i)
 		}
 	}
-
-	t.Logf("test success")
 }
 
 func BenchmarkVerifySign(b *testing.B) {
@@ -84,10 +88,11 @@ func BenchmarkVerifySign(b *testing.B) {
 		sign, err := PRIVATE_KEY.Sign(TEST_MESSAGE_1)
 		if err != nil {
 			b.Errorf("benchmark failed: sign")
+			break
 		}
-
 		if !PUBLIC_KEY.VerifySignature(TEST_MESSAGE_1, sign) {
 			b.Errorf("benchmark failed: verify")
+			break
 		}
 	}
 }

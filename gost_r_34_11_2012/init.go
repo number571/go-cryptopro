@@ -10,54 +10,13 @@ package gost_r_34_11_2012
 #cgo windows LDFLAGS: -lcrypt32 -lpthread
 */
 import "C"
+import "hash"
 
-/*
-func New() hash.Hash {
-	return sha256.New()
-}
+type Hash hash.Hash
 
-func Sum(bz []byte) []byte {
-	h := sha256.Sum256(bz)
-	return h[:]
-}
-
-const (
-	TruncatedSize = 20
-)
-
-type sha256trunc struct {
-	sha256 hash.Hash
-}
-
-func (h sha256trunc) Write(p []byte) (n int, err error) {
-	return h.sha256.Write(p)
-}
-
-func (h sha256trunc) Sum(b []byte) []byte {
-	shasum := h.sha256.Sum(b)
-	return shasum[:TruncatedSize]
-}
-
-func (h sha256trunc) Reset() {
-	h.sha256.Reset()
-}
-
-func (h sha256trunc) Size() int {
-	return TruncatedSize
-}
-
-func (h sha256trunc) BlockSize() int {
-	return h.sha256.BlockSize()
-}
-
-func NewTruncated() hash.Hash {
-	return sha256trunc{
-		sha256: sha256.New(),
+func toCbytes(data []byte) *C.uchar {
+	if len(data) > 0 {
+		return (*C.uchar)(&data[0])
 	}
+	return nil
 }
-
-func SumTruncated(bz []byte) []byte {
-	hash := sha256.Sum256(bz)
-	return hash[:TruncatedSize]
-}
-*/

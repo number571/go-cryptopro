@@ -1,7 +1,10 @@
-// go test -v -run=TestRand -bench=. -benchtime=100x
+// go test -v -bench=. -benchtime=100x
 package gost_r_iso_28640_2012
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 const (
 	READSIZE = 128
@@ -15,6 +18,9 @@ func TestRand(t *testing.T) {
 	}
 	if n != READSIZE {
 		t.Errorf("test failed: n != READSIZE")
+	}
+	if bytes.Equal(buffer, Rand(READSIZE)) {
+		t.Errorf("test failed: rand equal")
 	}
 }
 

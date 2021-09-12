@@ -1,4 +1,4 @@
-package gost_r_34_12_2015
+package gost_r_34_10_2012_eph
 
 /*
 #cgo LDFLAGS: -Wl,--allow-multiple-definition
@@ -10,6 +10,25 @@ package gost_r_34_12_2015
 #cgo windows LDFLAGS: -lcrypt32 -lpthread
 */
 import "C"
+
+type Address []byte
+
+type PrivKey interface {
+	Bytes() []byte
+	String() string
+	Secret(PubKey) []byte
+	PubKey() PubKey
+	Equals(PrivKey) bool
+	Type() string
+}
+
+type PubKey interface {
+	Address() Address
+	Bytes() []byte
+	String() string
+	Equals(PubKey) bool
+	Type() string
+}
 
 func toCbytes(data []byte) *C.uchar {
 	if len(data) > 0 {

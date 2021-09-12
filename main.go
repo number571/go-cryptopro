@@ -1,40 +1,28 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 
-	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012"
+	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
 )
 
 func main() {
-	cfg := gkeys.NewConfig(gkeys.K256, "username", "password")
-
-	err := gkeys.GenPrivKey(cfg)
+	priv1, err := gkeys.NewPrivKey(gkeys.K256)
 	if err != nil {
-		fmt.Println("Warning: key already exist?")
+		panic(err)
 	}
-
-	priv, err := gkeys.NewPrivKey(cfg)
+	priv2, err := gkeys.NewPrivKey(gkeys.K256)
 	if err != nil {
 		panic(err)
 	}
 
-	pub := priv.PubKey()
-	pbytes := pub.Bytes()
+	xchkey1 := priv1.Secret(priv2.PubKey())
+	xchkey2 := priv2.Secret(priv1.PubKey())
 
-	msg := []byte("hello, world!")
-	sign, err := priv.Sign(msg)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf(
-		"Type: %s;\nPubKey [%dB]: %x;\nSign [%dB]: %x;\nSuccess: %t;\n",
-		pub.Type(),
-		len(pbytes),
-		pbytes,
-		len(sign),
-		sign,
-		pub.VerifySignature(msg, sign),
+	fmt.Printf("Xchkey1: %X;\nXchkey2: %X;\nSuccess: %t;\n",
+		xchkey1,
+		xchkey2,
+		bytes.Equal(xchkey1, xchkey2),
 	)
 }

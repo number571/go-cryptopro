@@ -1,50 +1,82 @@
-#ifndef GOST_R_34_11_2012
-#define GOST_R_34_11_2012
+#ifndef GOST_R_34_11_2012_H
+#define GOST_R_34_11_2012_H
 
 #include "../headers/common.h"
 
-extern int NewHash(HCRYPTPROV *hProv, HCRYPTHASH *hHash) {
-	if (!CryptAcquireContext(hProv, NULL, NULL, PROV_GOST_2012_256, 0)) {
-		PRINT_ERROR("NewHash: CryptAcquireContext");
-		return -1;
-	}
+// DESCRIPTION:
+// HCRYPTHASH object setting function
+// for subsequent hashing of information; 
+// INPUT:
+// prov  - type of crypto provider (80 or 81);
+// hProv - pointer to crypto provider;
+// hHash - pointer to HCRYPTHASH object;
+// OUTPUT:
+// hProv - cryptographic provider = PROV_GOST_2012_256;
+// hHash - initialized HCRYPTPROV object;
+// int (NewHash) = 0 if success;
+extern int NewHash(BYTE prov, HCRYPTPROV *hProv, HCRYPTHASH *hHash);
 
-	if (!CryptCreateHash(*hProv, CALG_GR3411_2012_256, 0, 0, hHash)) {
-		PRINT_ERROR("NewHash: CryptCreateHash");
-		CryptReleaseContext(*hProv, 0);
-		return -2;
-	}
+// DESCRIPTION:
+// Partial information hashing function;
+// Executed only after the NewHash function,
+// when the HCRYPTHASH object has been initialized; 
+// INPUT:
+// hHash - pointer to HCRYPTHASH object;
+// hProv - pointer to crypto provider;
+// data  - data to hash;
+// size  - size of data;
+// OUTPUT:
+// hHash - object containing a piece of hashed information;
+// int (WriteHash) = 0 if success;
+extern int WriteHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *data, DWORD size);
 
-	return 0;
-}
+// DESCRIPTION:
+// End full hashing function;
+// INPUT:
+// hHash   - pointer to HCRYPTHASH object;
+// hProv   - pointer to crypto provider;
+// rgbHash - pointer to byte array;
+// cbHash  - size of the hash function result in bytes;
+// OUTPUT:
+// rgbHash - full hashing result;
+// int (ReadHash) = 0 if success;
+extern int ReadHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *rgbHash, DWORD cbHash);
 
-extern int WriteHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *data, DWORD size) {
-	if (!CryptHashData(*hHash, data, size, 0)) {
-		PRINT_ERROR("WriteHash: CryptHashData");
-		CryptDestroyHash(*hHash);
-		CryptReleaseContext(*hProv, 0);
-		return -1;
-	}
+// DESCRIPTION:
+// Push state of hashing to HCRYPTHASH object;
+// INPUT:
+// hHash   - pointer to HCRYPTHASH object;
+// hProv   - pointer to crypto provider;
+// rgbHash - pointer to byte array;
+// cbHash  - size of the state;
+// OUTPUT:
+// hHash   - updated HCRYPTHASH object;
+// int (WriteStateHash) = 0 if success;
+extern int WriteStateHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *rgbHash, DWORD cbHash);
 
-	return 0;
-}
+// DESCRIPTION:
+// Read current state of hash;
+// INPUT:
+// hHash   - pointer to HCRYPTHASH object;
+// hProv   - pointer to crypto provider;
+// rgbHash - pointer to byte array;
+// cbHash  - size of the state;
+// OUTPUT:
+// rgbHash - state of hashing;
+// cbHash  - size of the state;
+// int (ReadStateHash) = 0 if success;
+extern int ReadStateHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *rgbHash, DWORD *cbHash);
 
-extern int ReadHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv, BYTE *rgbHash, DWORD cbHash) {
-	if (!CryptGetHashParam(*hHash, HP_HASHVAL, rgbHash, &cbHash, 0)) {
-		PRINT_ERROR("ReadHash: CryptGetHashParam");
-		CryptDestroyHash(*hHash);
-		CryptReleaseContext(*hProv, 0);
-		return -1;
-	}
+// DESCRIPTION:
+// Function for clearing the HCRYPTHASH object and cryptographic provider
+// after the end of all actions. Can be performed
+// only after the NewHash function, when an object of type
+// HCRYPTHASH has been initialized; 
+// INPUT:
+// hHash - pointer to HCRYPTHASH object;
+// hProv - pointer to crypto provider;
+// OUTPUT:
+// int (CloseHash) = 0 if success;
+extern int CloseHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv);
 
-	return 0;
-}
-
-extern int CloseHash(HCRYPTHASH *hHash, HCRYPTPROV *hProv) {
-	CryptDestroyHash(*hHash);
-	CryptReleaseContext(*hProv, 0);
-
-	return 0;
-}
-
-#endif /* GOST_R_34_11_2012 */
+#endif /* GOST_R_34_11_2012_H */

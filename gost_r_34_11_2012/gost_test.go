@@ -1,4 +1,4 @@
-// go test -v -run=TestHash -bench=. -benchtime=100x
+// go test -v -bench=. -benchtime=100x
 package gost_r_34_11_2012
 
 import (
@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	HASH_RESULT  = "2e3cbeb240b4b8d1e2dc8610faff9e5bee23f95bb04c18d999034487dbecb490"
-	DHASH_RESULT = "7c8ae9a518d240d6174a18c861db7b46856de3d146766bda4447edeaf7e2ad0c"
+	HASH_RESULT_256 = "2e3cbeb240b4b8d1e2dc8610faff9e5bee23f95bb04c18d999034487dbecb490"
+	HASH_RESULT_512 = "9d76bd134189782acae0756763c7b1c89747c264a7d0ca3c47f5402d002e02ce6fe743159e7472eaab7c5aae5bbee31316ed5acc5051a69fe6bedf50a7bf273e"
 )
 
 var (
@@ -17,71 +17,112 @@ var (
 	TEST_MESSAGE_3 = []byte("aaabbb") // <- hashing
 )
 
-func TestHash(t *testing.T) {
-	hasher := New()
+func TestHash256(t *testing.T) {
+	//-----------------------------------------------------------------
+	hasher := New(H256)
 	hasher.Write(TEST_MESSAGE_3)
-	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT {
+	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_256 {
 		t.Errorf("test failed: hash(1) != HASH_RESULT")
 	}
 
-	hasher = New()
-	hasher.Write(TEST_MESSAGE_1)
-	hasher.Write(TEST_MESSAGE_2)
-	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT {
+	if hex.EncodeToString(Sum(H256, TEST_MESSAGE_3)) != HASH_RESULT_256 {
 		t.Errorf("test failed: hash(2) != HASH_RESULT")
 	}
 
-	if hex.EncodeToString(hasher.Sum(TEST_MESSAGE_3)) != HASH_RESULT {
-		t.Errorf("test failed: hash(3) != HASH_RESULT")
-	}
-
-	data := Sum(TEST_MESSAGE_3)
-
-	if hex.EncodeToString(data) != HASH_RESULT {
-		t.Errorf("test failed: hash(4) != HASH_RESULT")
-	}
-
-	hasher = New()
-	hasher.Write(data)
+	hasher = New(H256)
 	hasher.Write(TEST_MESSAGE_1)
 	hasher.Write(TEST_MESSAGE_2)
-
-	if hex.EncodeToString(hasher.Sum(nil)) != DHASH_RESULT {
-		t.Errorf("test failed: hash(5) != DHASH_RESULT")
+	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_256 {
+		t.Errorf("test failed: hash(2) != HASH_RESULT")
 	}
 
-	if hex.EncodeToString(DoubleSum(TEST_MESSAGE_3)) != DHASH_RESULT {
-		t.Errorf("test failed: hash(6) != DHASH_RESULT")
-	}
+	//-----------------------------------------------------------------
+	hasher = New(H256)
+	hasher.Write(TEST_MESSAGE_1)
+	res1 := hex.EncodeToString(hasher.Sum(nil))
 
-	t.Logf("test success")
+	hasher.Reset()
+	hasher.Write(TEST_MESSAGE_1)
+	res2 := hex.EncodeToString(hasher.Sum(nil))
+
+	if res1 != res2 {
+		t.Errorf("test failed: reset results not equals")
+	}
 }
 
-func BenchmarkHasher(b *testing.B) {
+func TestHash512(t *testing.T) {
+	//-----------------------------------------------------------------
+	hasher := New(H512)
+	hasher.Write(TEST_MESSAGE_3)
+	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_512 {
+		t.Errorf("test failed: hash(1) != HASH_RESULT")
+	}
+
+	if hex.EncodeToString(Sum(H512, TEST_MESSAGE_3)) != HASH_RESULT_512 {
+		t.Errorf("test failed: hash(2) != HASH_RESULT")
+	}
+
+	hasher = New(H512)
+	hasher.Write(TEST_MESSAGE_1)
+	hasher.Write(TEST_MESSAGE_2)
+	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_512 {
+		t.Errorf("test failed: hash(2) != HASH_RESULT")
+	}
+
+	//-----------------------------------------------------------------
+	hasher = New(H512)
+	hasher.Write(TEST_MESSAGE_1)
+	res1 := hex.EncodeToString(hasher.Sum(nil))
+
+	hasher.Reset()
+	hasher.Write(TEST_MESSAGE_1)
+	res2 := hex.EncodeToString(hasher.Sum(nil))
+
+	if res1 != res2 {
+		t.Errorf("test failed: reset results not equals")
+	}
+}
+
+func BenchmarkHasher256(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		hasher := New()
+		hasher := New(H256)
 		hasher.Write(TEST_MESSAGE_1)
 		hasher.Write(TEST_MESSAGE_2)
-		if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT {
+		if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_256 {
 			b.Errorf("benchmark failed: hash != HASH_RESULT")
+			break
 		}
 	}
 }
 
-func BenchmarkSum(b *testing.B) {
+func BenchmarkSum256(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		data := Sum(TEST_MESSAGE_3)
-		if hex.EncodeToString(data) != HASH_RESULT {
+		data := Sum(H256, TEST_MESSAGE_3)
+		if hex.EncodeToString(data) != HASH_RESULT_256 {
 			b.Errorf("benchmark failed: hash != HASH_RESULT")
+			break
 		}
 	}
 }
 
-func BenchmarkDoubleSum(b *testing.B) {
+func BenchmarkHasher512(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		data := DoubleSum(TEST_MESSAGE_3)
-		if hex.EncodeToString(data) != DHASH_RESULT {
+		hasher := New(H512)
+		hasher.Write(TEST_MESSAGE_1)
+		hasher.Write(TEST_MESSAGE_2)
+		if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_512 {
 			b.Errorf("benchmark failed: hash != HASH_RESULT")
+			break
+		}
+	}
+}
+
+func BenchmarkSum512(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		data := Sum(H512, TEST_MESSAGE_3)
+		if hex.EncodeToString(data) != HASH_RESULT_512 {
+			b.Errorf("benchmark failed: hash != HASH_RESULT")
+			break
 		}
 	}
 }

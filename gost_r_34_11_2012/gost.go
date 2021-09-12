@@ -1,4 +1,5 @@
 // ГОСТ Р 34.11-2012
+// https://docs.cntd.ru/document/1200095035
 package gost_r_34_11_2012
 
 /*
@@ -6,159 +7,232 @@ package gost_r_34_11_2012
 */
 import "C"
 import (
-	"bytes"
+	"crypto/hmac"
 	"fmt"
 	"hash"
 )
 
-type Hash struct {
-	hHash *C.HCRYPTHASH
-	hProv *C.HCRYPTPROV
-}
+var (
+	_ Hash = &Hash256{}
+	_ Hash = &Hash512{}
+)
+
+type ProvType byte
 
 const (
-	Size      = 32
+	H256 ProvType = 80
+	H512 ProvType = 81
+)
+
+const (
+	HashType = "ГОСТ Р 34.11-2012"
+)
+
+const (
+	Size256   = 32
+	Size512   = 64
 	BlockSize = 64
 )
 
-var _ hash.Hash = Hash{}
+func (h ProvType) String() string {
+	switch h {
+	case H256:
+		return "256"
+	case H512:
+		return "512"
+	default:
+		return "???"
+	}
+}
 
-func New() Hash {
+func (h ProvType) Size() int {
+	switch h {
+	case H256:
+		return Size256
+	case H512:
+		return Size512
+	default:
+		return -1
+	}
+}
+
+/*
+ * HASH
+ */
+
+type Hash512 Hash256
+type Hash256 struct {
+	prov   ProvType
+	length C.uint
+	states []byte
+}
+
+// Create Hash object.
+func New(prov ProvType) Hash {
 	var (
 		hh C.HCRYPTHASH
 		hp C.HCRYPTPROV
+
+		states = make([]byte, 512)
+		length C.uint
 	)
-	ret := C.NewHash(&hp, &hh)
+
+	ret := C.NewHash(C.uchar(prov), &hp, &hh)
 	if ret < 0 {
 		panic(fmt.Errorf("error code: %d", ret))
 	}
-	return Hash{
-		hHash: &hh,
-		hProv: &hp,
+	defer C.CloseHash(&hh, &hp)
+
+	ret = C.ReadStateHash(&hh, &hp, toCbytes(states), &length)
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
+	switch prov {
+	case H256:
+		return &Hash256{
+			prov:   prov,
+			length: length,
+			states: states,
+		}
+	case H512:
+		return &Hash512{
+			prov:   prov,
+			length: length,
+			states: states,
+		}
+	default:
+		return nil
 	}
 }
 
-func (h Hash) Write(p []byte) (n int, err error) {
+// Writing a piece of information to the Hash object.
+func (hasher *Hash512) Write(p []byte) (n int, err error) {
+	return (*Hash256)(hasher).Write(p)
+}
+func (hasher *Hash256) Write(p []byte) (n int, err error) {
 	var (
-		datlen          = len(p)
-		datptr *C.uchar = nil
+		hh C.HCRYPTHASH
+		hp C.HCRYPTPROV
+
+		datlen = len(p)
 	)
-	if datlen > 0 {
-		datptr = (*C.uchar)(&p[0])
-	}
-	ret := C.WriteHash(h.hHash, h.hProv, datptr, C.uint(datlen))
+
+	ret := C.NewHash(C.uchar(hasher.prov), &hp, &hh)
 	if ret < 0 {
 		panic(fmt.Errorf("error code: %d", ret))
 	}
+	defer C.CloseHash(&hh, &hp)
+
+	ret = C.WriteStateHash(&hh, &hp, toCbytes(hasher.states), hasher.length)
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
+	ret = C.WriteHash(&hh, &hp, toCbytes(p), C.uint(datlen))
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
+	ret = C.ReadStateHash(&hh, &hp, toCbytes(hasher.states), &hasher.length)
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
 	return datlen, nil
 }
 
-func (h Hash) Sum(b []byte) []byte {
+// If the interface function takes a non-zero argument,
+// then there is a redirection to the Sum function.
+func (hasher *Hash512) Sum(p []byte) []byte {
+	return (*Hash256)(hasher).Sum(p)
+}
+func (hasher *Hash256) Sum(p []byte) []byte {
 	var (
-		output = make([]byte, h.Size())
+		hh C.HCRYPTHASH
+		hp C.HCRYPTPROV
+
+		output = make([]byte, hasher.Size())
 	)
-	if b != nil {
-		return Sum(b)
-	}
-	ret := C.ReadHash(h.hHash, h.hProv, (*C.uchar)(&output[0]), C.uint(h.Size()))
+
+	ret := C.NewHash(C.uchar(hasher.prov), &hp, &hh)
 	if ret < 0 {
 		panic(fmt.Errorf("error code: %d", ret))
 	}
-	C.CloseHash(h.hHash, h.hProv)
+	defer C.CloseHash(&hh, &hp)
+
+	ret = C.WriteStateHash(&hh, &hp, toCbytes(hasher.states), hasher.length)
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
+	ret = C.WriteHash(&hh, &hp, toCbytes(p), C.uint(len(p)))
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
+	ret = C.ReadHash(&hh, &hp, toCbytes(output), C.uint(hasher.Size()))
+	if ret < 0 {
+		panic(fmt.Errorf("error code: %d", ret))
+	}
+
 	return output
 }
 
-func (h Hash) Reset() {
-	C.CloseHash(h.hHash, h.hProv)
-	ret := C.NewHash(h.hHash, h.hProv)
-	if ret < 0 {
-		panic(fmt.Errorf("error code: %d", ret))
-	}
+// Clear data in Hash object.
+func (hasher *Hash512) Reset() {
+	*hasher = *(New(hasher.prov)).(*Hash512)
+}
+func (hasher *Hash256) Reset() {
+	*hasher = *(New(hasher.prov)).(*Hash256)
 }
 
-func (h Hash) Size() int {
-	// 256 bits
-	return Size
+// Output block size from hash function.
+func (hasher *Hash512) Size() int {
+	return (*Hash256)(hasher).Size()
+}
+func (hasher *Hash256) Size() int {
+	return hasher.prov.Size()
 }
 
-func (h Hash) BlockSize() int {
-	// 512 bits
+// Input block size for hash function.
+func (hasher *Hash512) BlockSize() int {
+	return (*Hash256)(hasher).BlockSize()
+}
+func (hasher *Hash256) BlockSize() int {
 	return BlockSize
 }
 
-func Sum(data []byte) []byte {
-	hasher := New()
+// Retrieving a format string "ГОСТ Р 34.11-2012_???".
+func (hasher *Hash512) Type() string {
+	return (*Hash256)(hasher).Type()
+}
+func (hasher *Hash256) Type() string {
+	return fmt.Sprintf("%s %s", HashType, hasher.prov)
+}
+
+// Computing a hash(256 or 512) at a time.
+func Sum(prov ProvType, data []byte) []byte {
+	hasher := New(prov)
 	hasher.Write(data)
 	return hasher.Sum(nil)
 }
 
-// 	BaseProblem (Iteration) =>
-//	if
-// 		m     = m1, m2, ..., mk
-// 		m'    = m1, m2, ..., mk, m[k+1]
-//		and
-//		size of blocks m[i] equals size of hashing blocks
-//	then
-// 		H(m') = H'(H(m) || m[k+1])
-//
-// 	BaseProblem: Problem#1 (Addition) =>
-//	if
-//		h  = H(MAC || m)
-// 		and
-// 		h' = H'(h || m')
-//	then
-//		MAC is saved with message (m || m')
-//
-// 	BaseProblem: Problem#2 (Part collision) =>
-//	if
-// 		h  = H(m || MAC)
-// 		h' = H(m'|| MAC)
-// 		and
-//		H(m) = H(m')
-// 	then
-//		h = h'
-//
-//	Solution from
-//	"Practical cryptography" Niels Ferguson, Bruce Schneier
-//
-// 	Solution#1 (Addition) =>
-//			Q(m) -> H(H(m) || m)
-// 		if
-// 			h  = Q(MAC || m) = H(H(MAC || m) || (MAC || m))
-//			and
-//			h' = H'(h || m')
-// 		then
-//			MAC is not saved correctly with message (m || m')
-//		because
-// 			H'(H(H(MAC || m) || (MAC || m)) || m')
-//			not equal
-//			H'(H(H(MAC || m || m') || (MAC || m || m')))
-//
-// 	Solution#2 (Part collision) =>
-//			Q(m) -> H(H(m) || m)
-//		if
-//			h = Q(m || MAC)
-//			and
-//			h' = Q(m' || MAC)
-//			and
-//			H(m) = H(m')
-//		then
-//			h
-//			not equal
-//			h'
-//		because
-//			Q(m)
-//			not equal
-//			Q(m') =>
-//				H(H(m) || m)
-//				not equal
-//				H(H(m') || m') =>
-//					H(H(m || MAC) || (m || MAC))
-//					not equal
-//					H(H(m' || MAC) || (m' || MAC))
-func DoubleSum(data []byte) []byte {
-	return Sum(bytes.Join([][]byte{
-		Sum(data),
-		data,
-	}, []byte{}))
+// Create Hash(HMAC) object.
+func NewHMAC(prov ProvType, key []byte) Hash {
+	return hmac.New(newHasher(prov), key)
+}
+
+// Computing a hmac(256 or 512) at a time.
+func SumHMAC(prov ProvType, key, data []byte) []byte {
+	hasher := hmac.New(newHasher(prov), key)
+	hasher.Write(data)
+	return hasher.Sum(nil)
+}
+
+func newHasher(prov ProvType) func() hash.Hash {
+	h := func() hash.Hash {
+		return New(prov)
+	}
+	return h
 }

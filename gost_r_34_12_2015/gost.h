@@ -1,89 +1,23 @@
-#ifndef GOST_R_34_12_2015
-#define GOST_R_34_12_2015
+#ifndef GOST_R_34_12_2015_H
+#define GOST_R_34_12_2015_H
 
 #include "../headers/common.h"
 
-#define GR3412SIZ 16
-#define ENCRYPT    1
-#define DECRYPT   -1
+// DESCRIPTION:
+// Encryption / decryption function;
+// GOST R 34.12-2015;
+// Encryption mode = Output Feed Back (OFB);
+// The key is passed through the
+// hash function GOST R 34.11-2012; 
+// INPUT:
+// data  - initial data for encryption / decryption;
+// dsize - size of original data in bytes;
+// key   - encryption key;
+// ksize - encryption key size in bytes;
+// iv    - initialization vector = 16 bytes;
+// OUTPUT:
+// data - encrypted / decrypted data ;
+// int (Cipher) = 0 if success;
+extern int Encrypt(BYTE *data, DWORD dsize, BYTE *key, DWORD ksize, BYTE *iv);
 
-extern int Cipher(int opt, BYTE *data, DWORD dsize, BYTE *key, DWORD ksize, BYTE *iv) {
-	HCRYPTPROV hProv;
-	HCRYPTHASH hHash;
-	HCRYPTKEY hKey;
-	DWORD mode;
-	int len;
-
-	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_GOST_2012_256, 0)) {
-		PRINT_ERROR("Cipher: CryptAcquireContext");
-        return -1;
-    }
-
-	if (!CryptCreateHash(hProv, CALG_GR3411_2012_256, 0, 0, &hHash)) {
-		PRINT_ERROR("Cipher: CryptCreateHash");
-		CryptReleaseContext(hProv, 0);
-        return -2;
-    }
-
-	if (!CryptHashData(hHash, key, ksize, 0)) {
-		PRINT_ERROR("Cipher: CryptHashData");
-        CryptDestroyHash(hHash);
-        CryptReleaseContext(hProv, 0);
-        return -3;
-    }
-
-	if (!CryptDeriveKey(hProv, CALG_GR3412_2015_K, hHash, CRYPT_EXPORTABLE, &hKey)) {
-		PRINT_ERROR("Cipher: CryptDeriveKey");
-        CryptDestroyHash(hHash);
-        CryptReleaseContext(hProv, 0);
-        return -4;
-    }
-
-	if(!CryptSetKeyParam(hKey, KP_IV, iv, 0)) {
-		PRINT_ERROR("Cipher: CryptSetKeyParam (1)");
-		CryptDestroyKey(hKey);
-		CryptDestroyHash(hHash);
-        CryptReleaseContext(hProv, 0);
-        return -5;
-	}
-
-	mode = CRYPT_MODE_CBC;
-	if(!CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&mode, 0)) {
-		PRINT_ERROR("Cipher: CryptSetKeyParam (2)");
-		CryptDestroyKey(hKey);
-		CryptDestroyHash(hHash);
-        CryptReleaseContext(hProv, 0);
-        return -6;
-	}
-
-	switch(opt) {
-	case ENCRYPT:
-		len = dsize - GR3412SIZ;
-		if (!CryptEncrypt(hKey, 0, 1, 0, data, &len, dsize)) {
-			PRINT_ERROR("Cipher: CryptEncrypt");
-			CryptDestroyKey(hKey);
-			CryptDestroyHash(hHash);
-			CryptReleaseContext(hProv, 0);
-			return -7;
-		}
-		break;
-	case DECRYPT:
-		len = dsize;
-		if (!CryptDecrypt(hKey, 0, 1, 0, data, &len)) {
-			PRINT_ERROR("Cipher: CryptDecrypt");
-			CryptDestroyKey(hKey);
-			CryptDestroyHash(hHash);
-			CryptReleaseContext(hProv, 0);
-			return -8;
-		}
-		break;
-	}
-
-	CryptDestroyKey(hKey);
-	CryptDestroyHash(hHash);
-    CryptReleaseContext(hProv, 0);
-
-	return len;
-}
-
-#endif /* GOST_R_34_12_2015 */
+#endif /* GOST_R_34_12_2015_H */

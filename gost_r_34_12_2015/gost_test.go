@@ -1,4 +1,4 @@
-// go test -v -run=TestEncryptDecrypt -bench=. -benchtime=100x
+// go test -v -bench=. -benchtime=100x
 package gost_r_34_12_2015
 
 import (
@@ -8,36 +8,56 @@ import (
 
 var (
 	TEST_MESSAGE = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	SESSION_KEY  = Keygen()
+	OPEN_MESSAGE = []byte("hello, world")
+	SESSION_KEY  = []byte("qwertyuiopasdfghjklzxcvbnm123456")
+	NONCE        = []byte("1234567890123456")
 )
 
 func TestEncryptDecrypt(t *testing.T) {
-	enc := Encrypt(TEST_MESSAGE, SESSION_KEY)
-	dec, err := Decrypt(enc, SESSION_KEY)
+	aead, err := New(SESSION_KEY)
 	if err != nil {
-		t.Errorf("test failed: decrypt")
+		t.Errorf("test failed: new aead error")
 	}
+
+	enc := aead.Seal(nil, NONCE, TEST_MESSAGE, OPEN_MESSAGE)
+
+	dec, err := aead.Open(nil, NONCE, enc, OPEN_MESSAGE)
+	if err != nil {
+		t.Errorf("test failed: data != dec")
+	}
+
 	if !bytes.Equal(TEST_MESSAGE, dec) {
 		t.Errorf("test failed: data != dec")
 	}
-	t.Logf("test success")
+
+	enc[50] ^= byte(0x1)
+
+	_, err = aead.Open(nil, NONCE, enc, OPEN_MESSAGE)
+	if err == nil {
+		t.Errorf("test failed: corrupted dec = data")
+	}
 }
 
 func BenchmarkEncrypt(b *testing.B) {
+	aead, err := New(SESSION_KEY)
+	if err != nil {
+		b.Errorf("test failed: new aead error")
+	}
 	for i := 0; i < b.N; i++ {
-		_ = Encrypt(TEST_MESSAGE, SESSION_KEY)
+		_ = aead.Seal(nil, NONCE, TEST_MESSAGE, OPEN_MESSAGE)
 	}
 }
 
 func BenchmarkEncryptDecrypt(b *testing.B) {
+	aead, err := New(SESSION_KEY)
+	if err != nil {
+		b.Errorf("test failed: new aead error")
+	}
 	for i := 0; i < b.N; i++ {
-		enc := Encrypt(TEST_MESSAGE, SESSION_KEY)
-		dec, err := Decrypt(enc, SESSION_KEY)
+		enc := aead.Seal(nil, NONCE, TEST_MESSAGE, OPEN_MESSAGE)
+		_, err := aead.Open(nil, NONCE, enc, OPEN_MESSAGE)
 		if err != nil {
-			b.Errorf("benchmark failed: decrypt")
-		}
-		if !bytes.Equal(TEST_MESSAGE, dec) {
-			b.Errorf("benchmark failed: data != dec")
+			b.Errorf("test failed: data != dec")
 		}
 	}
 }
