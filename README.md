@@ -11,7 +11,7 @@
 ### Установка
 1. Скачать CSP 5.0 https://www.cryptopro.ru/products/csp/downloads
 2. Разархивировать и установить командой `./install.sh`
-3. Скачать `git clone bitbucket.org/Number571/go-cryptopro`
+3. Скачать `git clone github.org/Number571/go-cryptopro`
 4. Запустить `go run main.go`
 
 ### ГОСТ Р 34.10-2012 (ЭЦП)
@@ -61,7 +61,7 @@ package main
 import (
 	"fmt"
 
-	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012"
+	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012"
 )
 
 func main() {
@@ -147,7 +147,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
+	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
 )
 
 func main() {
@@ -214,7 +214,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "github.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 func main() {
@@ -277,7 +277,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gcipher "bitbucket.org/number571/go-cryptopro/gost_r_34_12_2015"
+	gcipher "github.org/number571/go-cryptopro/gost_r_34_12_2015"
 )
 
 func main() {
@@ -334,7 +334,7 @@ package main
 import (
 	"fmt"
 
-	grand "bitbucket.org/number571/go-cryptopro/gost_r_iso_28640_2012"
+	grand "github.org/number571/go-cryptopro/gost_r_iso_28640_2012"
 )
 
 func main() {

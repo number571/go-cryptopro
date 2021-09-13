@@ -12,7 +12,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gcipher "bitbucket.org/number571/go-cryptopro/gost_r_34_12_2015"
+	gcipher "github.org/number571/go-cryptopro/gost_r_34_12_2015"
 )
 
 func main() {

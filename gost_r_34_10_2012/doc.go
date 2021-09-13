@@ -31,7 +31,7 @@ package main
 import (
 	"fmt"
 
-	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012"
+	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012"
 )
 
 func main() {
