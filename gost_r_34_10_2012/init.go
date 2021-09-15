@@ -14,7 +14,7 @@ import (
 	"encoding/hex"
 	"unsafe"
 
-	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "github.com/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 /*

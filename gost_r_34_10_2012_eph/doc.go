@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
+	gkeys "github.com/number571/go-cryptopro/gost_r_34_10_2012_eph"
 )
 
 func main() {
