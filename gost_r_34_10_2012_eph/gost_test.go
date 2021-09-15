@@ -10,28 +10,68 @@ func TestSecret(t *testing.T) {
 	//-----------------------------------------------------------------
 	priv1, err := NewPrivKey(K256)
 	if err != nil {
-		panic(err)
+		t.Errorf("test failed: new priv key (1)")
+		return
 	}
+	priv1, err = LoadPrivKey(priv1.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load priv key (1)")
+		return
+	}
+
 	priv2, err := NewPrivKey(K256)
 	if err != nil {
-		panic(err)
+		t.Errorf("test failed: new priv key (2)")
+		return
+	}
+	priv2, err = LoadPrivKey(priv2.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load priv key (2)")
+		return
 	}
 
-	xchkey1 := priv1.Secret(priv2.PubKey())
-	xchkey2 := priv2.Secret(priv1.PubKey())
+	pub1 := priv1.PubKey()
+	pub1, err = LoadPubKey(pub1.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load pub key (1)")
+		return
+	}
+
+	pub2 := priv2.PubKey()
+	pub2, err = LoadPubKey(pub2.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load pub key (2)")
+		return
+	}
+
+	xchkey1 := priv1.Secret(pub2)
+	xchkey2 := priv2.Secret(pub1)
 
 	if !bytes.Equal(xchkey1, xchkey2) {
-		t.Errorf("test failed: secret not equal")
+		t.Errorf("test failed: secret not equal (1)")
 	}
 
 	//-----------------------------------------------------------------
 	priv3, err := NewPrivKey(K256)
 	if err != nil {
-		panic(err)
+		t.Errorf("test failed: new priv key (3)")
+		return
+	}
+	priv3, err = LoadPrivKey(priv3.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load priv key (2)")
+		return
 	}
 
-	xchkey3 := priv1.Secret(priv3.PubKey())
-	xchkey4 := priv3.Secret(priv1.PubKey())
+	pub3 := priv3.PubKey()
+	pub3, err = LoadPubKey(pub3.Bytes())
+	if err != nil {
+		t.Errorf("test failed: load pub key (3)")
+		return
+	}
+
+	xchkey3 := priv1.Secret(pub3)
+	xchkey4 := priv3.Secret(pub1)
 
 	if !bytes.Equal(xchkey3, xchkey4) {
 		t.Errorf("test failed: secret not equal (2)")

@@ -85,6 +85,9 @@ extern BYTE *BytesPrivateKey(BYTE prov, HCRYPTPROV *hProv, HCRYPTKEY *hKey, DWOR
         return NULL;
     }
 
+	CryptDestroyKey(hDerivedKey);
+	CryptDestroyHash(hHash);
+
 	return pkbytes;
 }
 
@@ -172,6 +175,7 @@ extern int ImportPrivateKey(BYTE prov, HCRYPTPROV *hProv, HCRYPTKEY *hKey, BYTE 
 		return -4;
 	}
 
+	CryptDestroyKey(hDerivedKey);
 	CryptDestroyHash(hHash);
 
 	return 0;

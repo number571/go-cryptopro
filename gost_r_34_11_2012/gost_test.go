@@ -23,10 +23,12 @@ func TestHash256(t *testing.T) {
 	hasher.Write(TEST_MESSAGE_3)
 	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_256 {
 		t.Errorf("test failed: hash(1) != HASH_RESULT")
+		return
 	}
 
 	if hex.EncodeToString(Sum(H256, TEST_MESSAGE_3)) != HASH_RESULT_256 {
 		t.Errorf("test failed: hash(2) != HASH_RESULT")
+		return
 	}
 
 	hasher = New(H256)
@@ -34,6 +36,7 @@ func TestHash256(t *testing.T) {
 	hasher.Write(TEST_MESSAGE_2)
 	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_256 {
 		t.Errorf("test failed: hash(2) != HASH_RESULT")
+		return
 	}
 
 	//-----------------------------------------------------------------
@@ -47,6 +50,7 @@ func TestHash256(t *testing.T) {
 
 	if res1 != res2 {
 		t.Errorf("test failed: reset results not equals")
+		return
 	}
 }
 
@@ -56,10 +60,12 @@ func TestHash512(t *testing.T) {
 	hasher.Write(TEST_MESSAGE_3)
 	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_512 {
 		t.Errorf("test failed: hash(1) != HASH_RESULT")
+		return
 	}
 
 	if hex.EncodeToString(Sum(H512, TEST_MESSAGE_3)) != HASH_RESULT_512 {
 		t.Errorf("test failed: hash(2) != HASH_RESULT")
+		return
 	}
 
 	hasher = New(H512)
@@ -67,6 +73,7 @@ func TestHash512(t *testing.T) {
 	hasher.Write(TEST_MESSAGE_2)
 	if hex.EncodeToString(hasher.Sum(nil)) != HASH_RESULT_512 {
 		t.Errorf("test failed: hash(2) != HASH_RESULT")
+		return
 	}
 
 	//-----------------------------------------------------------------
@@ -80,6 +87,7 @@ func TestHash512(t *testing.T) {
 
 	if res1 != res2 {
 		t.Errorf("test failed: reset results not equals")
+		return
 	}
 }
 

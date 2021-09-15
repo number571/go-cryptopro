@@ -1,14 +1,15 @@
 /*
 func New(prov ProvType) Hash {}
-func (hash *Hash) Write(p []byte) (n int, err error) {}
-func (hash *Hash) Sum(p []byte) []byte {}
-func (hash *Hash) Reset() {}
-func (hash *Hash) Size() int {}
-func (hash *Hash) BlockSize() int {}
-func (hash *Hash) Type() string {}
+func (hasher *Hash) Write(p []byte) (n int, err error) {}
+func (hasher *Hash) Sum(p []byte) []byte {}
+func (hasher *Hash) Reset() {}
+func (hasher *Hash) Size() int {}
+func (hasher *Hash) BlockSize() int {}
+func (hasher *Hash) Type() string {}
 
-func Sum256(data []byte) []byte {}
-func Sum512(data []byte) []byte {}
+func Sum(prov ProvType, data []byte) []byte {}
+func NewHMAC(prov ProvType, key []byte) Hash {}
+func SumHMAC(prov ProvType, key, data []byte) []byte {}
 */
 package gost_r_34_11_2012
 
@@ -19,7 +20,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ghash "github.org/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 
 	fmt.Println(hex.EncodeToString(hasher.Sum(msg3)))
 
-	data := ghash.Sum256(msg3)
+	data := ghash.Sum(ghash.H256, msg3)
 	fmt.Println(hex.EncodeToString(data))
 
 	hasher = ghash.New(ghash.H256)

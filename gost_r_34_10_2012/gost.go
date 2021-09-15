@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	ghash "github.com/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 func init() {
@@ -242,10 +242,11 @@ func (key PrivKey256) PubKey() PubKey {
 		hKey   C.HCRYPTKEY
 		publen C.uint
 		pbytes *C.uchar
+		prov   = key.prov()
 	)
 
 	ret := C.OpenContainer(
-		C.uchar(key.prov()),
+		C.uchar(prov),
 		&hProv,
 		&hKey,
 		key.container(),
@@ -268,7 +269,7 @@ func (key PrivKey256) PubKey() PubKey {
 	pubraw := C.GoBytes(unsafe.Pointer(pbytes), C.int(publen))
 	pubraw = bytes.Join(
 		[][]byte{
-			[]byte{byte(key.prov())},
+			[]byte{byte(prov)},
 			pubraw,
 		},
 		[]byte{},

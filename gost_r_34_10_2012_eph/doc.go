@@ -3,7 +3,7 @@ func NewPrivKey(cfg *Config) (PrivKey, error) {}
 func LoadPrivKey(pbytes []byte) (PrivKey, error) {}
 func (key PrivKey) Bytes() []byte {}
 func (key PrivKey) String() string {}
-func (key PrivKey256) Secret(pub PubKey) []byte {}
+func (key PrivKey) Secret(pub PubKey) []byte {}
 func (key PrivKey) PubKey() PubKey {}
 func (key PrivKey) Equals(cmp PrivKey) bool {}
 func (key PrivKey) Type() string {}
@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
+	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
 )
 
 func main() {

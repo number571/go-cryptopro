@@ -1,28 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-
-	gkeys "github.com/number571/go-cryptopro/gost_r_34_10_2012_eph"
+	grand "bitbucket.org/number571/go-cryptopro/gost_r_iso_28640_2012"
 )
 
 func main() {
-	priv1, err := gkeys.NewPrivKey(gkeys.K256)
-	if err != nil {
-		panic(err)
+	data := make([]byte, 16)
+	for {
+		grand.Read(data)
+		res := grand.Rand(32)
+		_ = res
 	}
-	priv2, err := gkeys.NewPrivKey(gkeys.K256)
-	if err != nil {
-		panic(err)
-	}
-
-	xchkey1 := priv1.Secret(priv2.PubKey())
-	xchkey2 := priv2.Secret(priv1.PubKey())
-
-	fmt.Printf("Xchkey1: %X;\nXchkey2: %X;\nSuccess: %t;\n",
-		xchkey1,
-		xchkey2,
-		bytes.Equal(xchkey1, xchkey2),
-	)
 }

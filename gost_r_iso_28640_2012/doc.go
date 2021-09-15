@@ -11,7 +11,7 @@ package main
 import (
 	"fmt"
 
-	grand "github.org/number571/go-cryptopro/gost_r_iso_28640_2012"
+	grand "bitbucket.org/number571/go-cryptopro/gost_r_iso_28640_2012"
 )
 
 func main() {

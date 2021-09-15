@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"unsafe"
 
-	gkeys "github.com/number571/go-cryptopro/gost_r_34_10_2012"
-	ghash "github.com/number571/go-cryptopro/gost_r_34_11_2012"
+	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 var (
@@ -59,27 +59,22 @@ func NewPrivKey(prov ProvType) (PrivKey, error) {
 	if result == nil {
 		return nil, fmt.Errorf("error: new private key")
 	}
+	defer C.free(unsafe.Pointer(result))
 
-	resptr := unsafe.Pointer(result)
-	defer C.free(resptr)
+	privraw := C.GoBytes(unsafe.Pointer(result), C.int(reslen))
+	privraw = bytes.Join(
+		[][]byte{
+			[]byte{byte(prov)},
+			privraw,
+		},
+		[]byte{},
+	)
 
 	switch prov {
 	case K256:
-		return PrivKey256(bytes.Join(
-			[][]byte{
-				[]byte{byte(prov)},
-				C.GoBytes(resptr, C.int(reslen)),
-			},
-			[]byte{},
-		)), nil
+		return PrivKey256(privraw), nil
 	case K512:
-		return PrivKey512(bytes.Join(
-			[][]byte{
-				[]byte{byte(prov)},
-				C.GoBytes(resptr, C.int(reslen)),
-			},
-			[]byte{},
-		)), nil
+		return PrivKey512(privraw), nil
 	default:
 		return nil, fmt.Errorf("error: undefined provider type")
 	}
@@ -183,7 +178,8 @@ func (key PrivKey256) PubKey() PubKey {
 	var (
 		hProv  C.HCRYPTPROV
 		hKey   C.HCRYPTKEY
-		reslen C.uint
+		publen C.uint
+		pbytes *C.uchar
 		prov   = key.prov()
 	)
 
@@ -196,21 +192,27 @@ func (key PrivKey256) PubKey() PubKey {
 		C.CryptReleaseContext(hProv, C.uint(0))
 	}()
 
-	result := C.BytesPublicKey(&hKey, &reslen)
-	if result == nil {
+	pbytes = C.BytesPublicKey(&hKey, &publen)
+	if pbytes == nil {
 		panic(fmt.Errorf("error: public key is nil"))
 	}
+	defer C.free(unsafe.Pointer(pbytes))
 
-	resptr := unsafe.Pointer(result)
-	defer C.free(resptr)
-
-	return PubKey256(bytes.Join(
+	pubraw := C.GoBytes(unsafe.Pointer(pbytes), C.int(publen))
+	pubraw = bytes.Join(
 		[][]byte{
-			[]byte{byte(prov)},
-			C.GoBytes(resptr, C.int(reslen)),
+			[]byte{byte(key.prov())},
+			pubraw,
 		},
 		[]byte{},
-	))
+	)
+
+	pubkey, err := LoadPubKey(pubraw)
+	if err != nil {
+		panic(err)
+	}
+
+	return pubkey
 }
 
 func (key PrivKey512) Equals(cmp PrivKey) bool {

@@ -15,24 +15,21 @@ func TestRand(t *testing.T) {
 	n, err := Read(buffer)
 	if err != nil {
 		t.Errorf("test failed: err != nil")
+		return
 	}
 	if n != READSIZE {
 		t.Errorf("test failed: n != READSIZE")
+		return
 	}
 	if bytes.Equal(buffer, Rand(READSIZE)) {
 		t.Errorf("test failed: rand equal")
+		return
 	}
 }
 
 func BenchmarkRand(b *testing.B) {
 	var buffer = make([]byte, READSIZE)
 	for i := 0; i < b.N; i++ {
-		n, err := Read(buffer)
-		if err != nil {
-			b.Errorf("benchmark failed: err != nil")
-		}
-		if n != READSIZE {
-			b.Errorf("benchmark failed: n != READSIZE")
-		}
+		_, _ = Read(buffer)
 	}
 }

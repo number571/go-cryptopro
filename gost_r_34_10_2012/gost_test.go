@@ -33,24 +33,37 @@ func init() {
 		panic("test failed: new priv key")
 	}
 
+	priv, err = LoadPrivKey(priv.Bytes())
+	if err != nil {
+		panic("test failed: load priv key")
+	}
+
 	PRIVATE_KEY = priv
 	PUBLIC_KEY = priv.PubKey()
+
+	PUBLIC_KEY, err = LoadPubKey(PUBLIC_KEY.Bytes())
+	if err != nil {
+		panic("test failed: load pub key")
+	}
 }
 
 func TestVerifySign(t *testing.T) {
 	sign, err := PRIVATE_KEY.Sign(TEST_MESSAGE_1)
 	if err != nil {
 		t.Errorf("test failed: sign")
+		return
 	}
 
 	if !PUBLIC_KEY.VerifySignature(TEST_MESSAGE_1, sign) {
 		t.Errorf("test failed: verify (1)")
+		return
 	}
 
 	sign[7] ^= byte(0x1)
 
 	if PUBLIC_KEY.VerifySignature(TEST_MESSAGE_1, sign) {
 		t.Errorf("test failed: verify (2)")
+		return
 	}
 }
 
@@ -67,6 +80,7 @@ func TestBatchVerifier(t *testing.T) {
 		sign, err := PRIVATE_KEY.Sign(v)
 		if err != nil {
 			t.Errorf("test failed: sign")
+			return
 		}
 		batchv.Add(PUBLIC_KEY, v, sign)
 	}
@@ -74,11 +88,13 @@ func TestBatchVerifier(t *testing.T) {
 	ok, oks := batchv.Verify()
 	if !ok {
 		t.Errorf("test failed: batch verify")
+		return
 	}
 
 	for i, v := range oks {
 		if !v {
 			t.Errorf("test failed: batch verify (%d)", i)
+			return
 		}
 	}
 }

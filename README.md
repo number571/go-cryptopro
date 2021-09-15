@@ -1,6 +1,6 @@
 # Go КриптоПро
 > Интерфейсы адаптированы под ядро Tendermint
-> https://github.com/tendermint/tendermint
+> https://bitbucket.org/number571/tendermint
 
 ### Реализация
 * ГОСТ Р 34.10-2012 (ЭЦП, ЭК)
@@ -11,7 +11,7 @@
 ### Установка
 1. Скачать CSP 5.0 https://www.cryptopro.ru/products/csp/downloads
 2. Разархивировать и установить командой `./install.sh`
-3. Скачать `git clone github.org/Number571/go-cryptopro`
+3. Скачать `git clone bitbucket.org/Number571/go-cryptopro`
 4. Запустить `go run main.go`
 
 ### ГОСТ Р 34.10-2012 (ЭЦП)
@@ -61,7 +61,7 @@ package main
 import (
 	"fmt"
 
-	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012"
+	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012"
 )
 
 func main() {
@@ -115,7 +115,7 @@ func NewPrivKey(cfg *Config) (PrivKey, error) {}
 func LoadPrivKey(pbytes []byte) (PrivKey, error) {}
 func (key PrivKey) Bytes() []byte {}
 func (key PrivKey) String() string {}
-func (key PrivKey256) Secret(pub PubKey) []byte {}
+func (key PrivKey) Secret(pub PubKey) []byte {}
 func (key PrivKey) PubKey() PubKey {}
 func (key PrivKey) Equals(cmp PrivKey) bool {}
 func (key PrivKey) Type() string {}
@@ -147,7 +147,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gkeys "github.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
+	gkeys "bitbucket.org/number571/go-cryptopro/gost_r_34_10_2012_eph"
 )
 
 func main() {
@@ -189,7 +189,6 @@ func (hasher *Hash) Reset() {}
 func (hasher *Hash) Size() int {}
 func (hasher *Hash) BlockSize() int {}
 func (hasher *Hash) Type() string {}
-func (hasher *Hash) DoubleSum(p []byte) []byte {}
 
 func Sum(prov ProvType, data []byte) []byte {}
 func NewHMAC(prov ProvType, key []byte) Hash {}
@@ -214,7 +213,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ghash "github.org/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 func main() {
@@ -277,7 +276,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gcipher "github.org/number571/go-cryptopro/gost_r_34_12_2015"
+	gcipher "bitbucket.org/number571/go-cryptopro/gost_r_34_12_2015"
 )
 
 func main() {
@@ -334,7 +333,7 @@ package main
 import (
 	"fmt"
 
-	grand "github.org/number571/go-cryptopro/gost_r_iso_28640_2012"
+	grand "bitbucket.org/number571/go-cryptopro/gost_r_iso_28640_2012"
 )
 
 func main() {

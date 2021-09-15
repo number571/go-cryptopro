@@ -12,10 +12,9 @@ package gost_r_34_10_2012
 import "C"
 import (
 	"encoding/hex"
-	"strings"
 	"unsafe"
 
-	ghash "github.com/number571/go-cryptopro/gost_r_34_11_2012"
+	ghash "bitbucket.org/number571/go-cryptopro/gost_r_34_11_2012"
 )
 
 /*
@@ -72,9 +71,17 @@ func NewConfig(prov ProvType, container, password string) *Config {
 
 func (cfg *Config) wrap() *Config {
 	return &Config{
-		prov:      cfg.prov,
-		container: doubleHashString(cfg.container + string(cfg.prov)),
-		password:  doubleHashString(cfg.password + cfg.container),
+		prov: cfg.prov,
+		container: hex.EncodeToString(ghash.SumHMAC(
+			ghash.H256,
+			[]byte(cfg.container),
+			[]byte{byte(cfg.prov)},
+		)),
+		password: hex.EncodeToString(ghash.SumHMAC(
+			ghash.H256,
+			[]byte(cfg.password),
+			[]byte(cfg.container),
+		)),
 	}
 }
 
@@ -91,82 +98,4 @@ func toCbytes(data []byte) *C.uchar {
 		return (*C.uchar)(&data[0])
 	}
 	return nil
-}
-
-// 	BaseProblem (Iteration) =>
-//	if
-// 		m     = m1, m2, ..., mk
-// 		m'    = m1, m2, ..., mk, m[k+1]
-//		and
-//		size of blocks m[i] equals size of hashing blocks
-//	then
-// 		H(m') = H'(H(m) || m[k+1])
-//
-// 	BaseProblem: Problem#1 (Addition) =>
-//	if
-//		h  = H(MAC || m)
-// 		and
-// 		h' = H'(h || m')
-//	then
-//		MAC is saved with message (m || m')
-//
-// 	BaseProblem: Problem#2 (Part collision) =>
-//	if
-// 		h  = H(m || MAC)
-// 		h' = H(m'|| MAC)
-// 		and
-//		H(m) = H(m')
-// 	then
-//		h = h'
-//
-//	Solution from
-//	"Practical cryptography" Niels Ferguson, Bruce Schneier
-//
-// 	Solution#1 (Addition) =>
-//			Q(m) -> H(H(m) || m)
-// 		if
-// 			h  = Q(MAC || m) = H(H(MAC || m) || (MAC || m))
-//			and
-//			h' = H'(h || m')
-// 		then
-//			MAC is not saved correctly with message (m || m')
-//		because
-// 			H'(H(H(MAC || m) || (MAC || m)) || m')
-//			not equal
-//			H'(H(H(MAC || m || m') || (MAC || m || m')))
-//
-// 	Solution#2 (Part collision) =>
-//			Q(m) -> H(H(m) || m)
-//		if
-//			h = Q(m || MAC)
-//			and
-//			h' = Q(m' || MAC)
-//			and
-//			H(m) = H(m')
-//		then
-//			h
-//			not equal
-//			h'
-//		because
-//			Q(m)
-//			not equal
-//			Q(m') =>
-//				H(H(m) || m)
-//				not equal
-//				H(H(m') || m') =>
-//					H(H(m || MAC) || (m || MAC))
-//					not equal
-//					H(H(m' || MAC) || (m' || MAC))
-func doubleHashString(data string) string {
-	return hashString(strings.Join(
-		[]string{
-			hashString(data),
-			data,
-		},
-		"",
-	))
-}
-
-func hashString(data string) string {
-	return hex.EncodeToString(ghash.Sum(ghash.H256, []byte(data)))
 }
