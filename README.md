@@ -1,6 +1,6 @@
 # Go КриптоПро
 > Интерфейсы адаптированы под ядро Tendermint
-> https://bitbucket.org/number571/tendermint
+> https://github.com/number571/tendermint
 
 ### Реализация
 * ГОСТ Р 34.10-2012 (ЭЦП, ЭК)
