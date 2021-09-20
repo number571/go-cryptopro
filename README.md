@@ -217,39 +217,16 @@ import (
 )
 
 func main() {
-	msg1 := []byte("aaa")
-	msg2 := []byte("bbb")
-	msg3 := []byte("aaabbb")
+	msg := []byte("hello, world!")
 
-	hasher := ghash.New(ghash.H256)
-	hasher.Write(msg3)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
-
-	hasher = ghash.New(ghash.H256)
-	hasher.Write(msg1)
-	hasher.Write(msg2)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
-
-	fmt.Println(hex.EncodeToString(hasher.Sum(msg3)))
-
-	data := ghash.Sum256(msg3)
-	fmt.Println(hex.EncodeToString(data))
-
-	hasher = ghash.New(ghash.H256)
-	hasher.Write(data)
-	hasher.Write(msg1)
-	hasher.Write(msg2)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
+	hash := ghash.Sum(ghash.H256, msg)
+	fmt.Println(hex.EncodeToString(hash))
 }
 ```
 
 ##### Пример вывода
 ```
-2e3cbeb240b4b8d1e2dc8610faff9e5bee23f95bb04c18d999034487dbecb490
-2e3cbeb240b4b8d1e2dc8610faff9e5bee23f95bb04c18d999034487dbecb490
-c15f2f30197026209e2f9a3f6e8276594ed1496bba115c2421bad2a18fb58cd1
-2e3cbeb240b4b8d1e2dc8610faff9e5bee23f95bb04c18d999034487dbecb490
-7c8ae9a518d240d6174a18c861db7b46856de3d146766bda4447edeaf7e2ad0c
+f1427470546232ec06d4644282cb5036293480a6c56ea255aa774feeffd1aec2
 ```
 
 ### ГОСТ Р 34.12-2015

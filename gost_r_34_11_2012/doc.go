@@ -24,28 +24,9 @@ import (
 )
 
 func main() {
-	msg1 := []byte("aaa")
-	msg2 := []byte("bbb")
-	msg3 := []byte("aaabbb")
+	msg := []byte("hello, world!")
 
-	hasher := ghash.New(ghash.H256)
-	hasher.Write(msg3)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
-
-	hasher = ghash.New(ghash.H256)
-	hasher.Write(msg1)
-	hasher.Write(msg2)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
-
-	fmt.Println(hex.EncodeToString(hasher.Sum(msg3)))
-
-	data := ghash.Sum(ghash.H256, msg3)
-	fmt.Println(hex.EncodeToString(data))
-
-	hasher = ghash.New(ghash.H256)
-	hasher.Write(data)
-	hasher.Write(msg1)
-	hasher.Write(msg2)
-	fmt.Println(hex.EncodeToString(hasher.Sum(nil)))
+	hash := ghash.Sum(ghash.H256, msg)
+	fmt.Println(hex.EncodeToString(hash))
 }
 */
