@@ -4,12 +4,24 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ghash "github.com/number571/go-cryptopro/gost_r_34_11_2012"
+	gkeys "github.com/number571/go-cryptopro/gost_r_34_10_2012"
 )
 
 func main() {
-	msg := []byte("hello, world!")
+	cfg := gkeys.NewConfig(gkeys.K256, "username", "password")
 
-	hash := ghash.Sum(ghash.H256, msg)
-	fmt.Println(hex.EncodeToString(hash))
+	err := gkeys.GenPrivKey(cfg)
+	if err != nil {
+		fmt.Println("Warning: key already exist?")
+	}
+
+	priv, err := gkeys.NewPrivKey(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Private key: %s\n\nPublic key: %s\n",
+		string(priv.Bytes()),
+		hex.EncodeToString(priv.PubKey().Bytes()),
+	)
 }
