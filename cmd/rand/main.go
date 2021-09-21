@@ -1,3 +1,4 @@
+// go run main.go 32 | base64
 package main
 
 import (
