@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	gkeys "github.com/number571/go-cryptopro/gost_r_34_10_2012"
@@ -20,8 +19,22 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Private key: %s\n\nPublic key: %s\n",
-		string(priv.Bytes()),
-		hex.EncodeToString(priv.PubKey().Bytes()),
+	pub := priv.PubKey()
+	pbytes := pub.Bytes()
+
+	msg := []byte("hello, world!")
+	sign, err := priv.Sign(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf(
+		"Type: %s;\nPubKey [%dB]: %x;\nSign [%dB]: %x;\nSuccess: %t;\n",
+		pub.Type(),
+		len(pbytes),
+		pbytes,
+		len(sign),
+		sign,
+		pub.VerifySignature(msg, sign),
 	)
 }

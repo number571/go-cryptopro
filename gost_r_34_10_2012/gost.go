@@ -109,25 +109,20 @@ func NewPrivKey(cfg *Config) (PrivKey, error) {
 		return nil, fmt.Errorf("error: private key is nil")
 	}
 
+	privraw := bytes.Join(
+		[][]byte{
+			[]byte{byte(cfg.prov)},
+			[]byte(cfg.container),
+			[]byte(cfg.password),
+		},
+		[]byte{},
+	)
+
 	switch cfg.prov {
 	case K256:
-		return PrivKey256(bytes.Join(
-			[][]byte{
-				[]byte{byte(K256)},
-				[]byte(cfg.container),
-				[]byte(cfg.password),
-			},
-			[]byte{},
-		)), nil
+		return PrivKey256(privraw), nil
 	case K512:
-		return PrivKey512(bytes.Join(
-			[][]byte{
-				[]byte{byte(K512)},
-				[]byte(cfg.container),
-				[]byte(cfg.password),
-			},
-			[]byte{},
-		)), nil
+		return PrivKey512(privraw), nil
 	default:
 		return nil, fmt.Errorf("error: key size not in (256, 512)")
 	}
