@@ -140,10 +140,6 @@ func (key PrivKey512) Secret(pub PubKey) []byte {
 	return PrivKey256(key).Secret(pub)
 }
 func (key PrivKey256) Secret(pub PubKey) []byte {
-	if key.Type() != pub.Type() {
-		return nil
-	}
-
 	var (
 		hProv  C.HCRYPTPROV
 		hKey   C.HCRYPTKEY

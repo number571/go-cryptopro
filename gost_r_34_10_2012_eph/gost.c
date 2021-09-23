@@ -233,7 +233,7 @@ extern BYTE *SharedSessionKey(HCRYPTPROV *hProv, HCRYPTKEY *hKey, BYTE *pkbytes,
     }
 
     if(!CryptImportKey(*hProv, pkbytes, keyBlobLen, *hKey, 0, &hPubKey)) {
-        PRINT_ERROR("SharedSessionKey: CryptImportKey");
+        // PRINT_ERROR("SharedSessionKey: CryptImportKey");
 		CryptDestroyKey(hSessionKey);
 		CryptDestroyHash(hHash);
 		CryptDestroyKey(*hKey);

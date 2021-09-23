@@ -168,6 +168,7 @@ extern int VerifySign(BYTE prov, HCRYPTKEY *hKey, BYTE *sign, DWORD dwSigLen, BY
 	}
 
 	if(!CryptVerifySignature(hHash, sign, dwSigLen, *hKey, NULL, 0)) {
+		// PRINT_ERROR("VerifySign: CryptVerifySignature");
 		CryptDestroyHash(hHash);
 		CryptReleaseContext(hProv, 0);
         return 1;

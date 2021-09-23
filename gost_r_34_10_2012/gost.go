@@ -206,10 +206,11 @@ func (key PrivKey256) Sign(dbytes []byte) ([]byte, error) {
 	var (
 		datlen = len(dbytes)
 		reslen C.uint
+		prov = key.prov()
 	)
 
 	result := C.SignMessage(
-		C.uchar(key.prov()),
+		C.uchar(prov),
 		key.container(),
 		key.password(),
 		toCbytes(dbytes),
@@ -397,9 +398,10 @@ func (key PubKey256) VerifySignature(dbytes, sign []byte) bool {
 	var (
 		hProv C.HCRYPTPROV
 		hKey  C.HCRYPTKEY
+		prov  = key.prov()
 	)
 
-	ret := C.ImportPublicKey(C.uchar(key.prov()), &hProv, &hKey, key.bytes(), key.len())
+	ret := C.ImportPublicKey(C.uchar(prov), &hProv, &hKey, key.bytes(), key.len())
 	if ret < 0 {
 		panic(fmt.Errorf("error: code: %d", ret))
 	}
@@ -409,7 +411,7 @@ func (key PubKey256) VerifySignature(dbytes, sign []byte) bool {
 	}()
 
 	ret = C.VerifySign(
-		C.uchar(key.prov()),
+		C.uchar(prov),
 		&hKey, toCbytes(sign),
 		C.uint(len(sign)),
 		toCbytes(dbytes),
