@@ -15,7 +15,7 @@ extern int NewHash(BYTE prov, HCRYPTPROV *hProv, HCRYPTHASH *hHash) {
 		break;
 	}
 
-    if (!CryptAcquireContext(hProv, NULL, NULL, prov, 0)) {
+    if (!CryptAcquireContext(hProv, NULL, NULL, prov, CRYPT_VERIFYCONTEXT)) {
         PRINT_ERROR("NewHash: CryptAcquireContext");
         return -1;
     }
